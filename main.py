@@ -10,16 +10,21 @@ from modules.morphologic import (
     Closing
 )
 from modules.hist_equalization import HistogramEqualization
+from modules.multi_threshold import MultiThreshold
+from modules.watershed import WaterShed
 
 import cv2 as cv
 
 parser = argparse.ArgumentParser(description="Image Process on Medical Images")
 
-parser.add_argument('--image', type = str, default = 'ultrason-fetus.tif', help = 'Image Name')
-parser.add_argument('--histogram', action = 'store_true', help = 'Calc Histogram')
-parser.add_argument('--binarization', type = int, choices=list(range(1, 256)), required=False, help = 'Make Binarization')
-parser.add_argument('--morphologic', choices=["dilation", "erosion", "opening", "closing"], type = str, default = None, help = 'Make Morphologic Operation')
-parser.add_argument('--equalization', action = 'store_true', help = 'Make Histogram Equalization')
+parser.add_argument('-im', '--image', type = str, default = 'ultrason-fetus.tif', help = 'Image Name')
+parser.add_argument('-hist', '--histogram', action = 'store_true', help = 'Calc Histogram')
+parser.add_argument('-tobin', '--binarization', type = int, choices=list(range(1, 256)), required = False, help = 'Make Binarization')
+parser.add_argument('-morp', '--morphologic', choices=["dilation", "erosion", "opening", "closing"], type = str, default = None, help = 'Make Morphologic Operation')
+parser.add_argument('-eq', '--equalization', action = 'store_true', help = 'Make Histogram Equalization')
+parser.add_argument('-mt', '--multi_thresh', default = None, type = int, help = 'Make MultiThresh', required = False)
+parser.add_argument('-th', '--th_values', type = int, nargs = '+', help = 'Give Threshold Values', required = False)
+parser.add_argument('-ws', '--watershed', action='store_true', help = 'Make Watershed')
 
 args = parser.parse_args()
 
@@ -51,6 +56,16 @@ if __name__ == "__main__":
                 cv.imshow("Otsu Closed", Closing(binaryImg["Otsu Thresholded Image"]))
                 cv.imshow("Adaptive With Gaussian Closed", Closing(binaryImg["Adaptive Thresholded With Gaussian"]))
                 cv.imshow("Adaptive With Mean Closed", Closing(binaryImg["Adaptive Thresholded With Mean"]))
+    if args.multi_thresh:
+        if args.th_values:
+            if args.multi_thresh != len(args.th_values) + 1:
+                print("Class Count Must Be Equal to Count of Threshold Values Plus 1")
+                sys.exit()
+            MultiThreshold(args.image, args.th_values, classCount = args.multi_thresh)
+        else:
+            MultiThreshold(args.image, classCount = args.multi_thresh)
+    if args.watershed:
+        WaterShed(args.image)
 
     cv.waitKey(0)
     cv.destroyAllWindows()
